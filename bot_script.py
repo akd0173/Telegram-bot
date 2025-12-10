@@ -6,10 +6,12 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, ApplicationBuilder
 
 # --- Configuration ---
+# Sets up basic logging to see when the bot sends videos
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- Global Data ---
+# Load the list of video File IDs from the JSON file created earlier
 VIDEO_IDS = []
 try:
     with open('video_ids.json', 'r') as f:
@@ -31,8 +33,10 @@ async def send_random_video(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         await update.message.reply_text("Sorry, no video IDs found. Please upload videos first.")
         return
 
+    # Pick a random File ID from the list
     random_id = random.choice(VIDEO_IDS)
     
+    # Send the video using the File ID (Telegram handles the rest for free)
     await context.bot.send_video(
         chat_id=update.effective_chat.id,
         video=random_id,
@@ -54,7 +58,8 @@ def main() -> None:
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("video", send_random_video))
 
-    # *** CRITICAL FIX: Running POLLING instead of the crashing Webhook setup ***
+    # CRITICAL FIX: Running POLLING instead of the crashing Webhook setup
+    # This keeps the bot stable, though it might be slow (5-10 second delay).
     application.run_polling(poll_interval=3) 
 
 if __name__ == "__main__":
